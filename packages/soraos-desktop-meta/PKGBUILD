@@ -1,0 +1,53 @@
+pkgname=soraos-desktop-meta
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='SoraOS desktop package set: KDE Plasma, branding, repo, and defaults'
+arch=('any')
+url='https://github.com/Mochi-Sora/SoraOS'
+license=('AGPL-3.0-only')
+depends=(
+    'soraos-branding'
+    'soraos-keyring'
+    'soraos-mirrorlist'
+    'soraos-release'
+    'plasma-meta'
+    'plasma-login-manager'
+    'konsole'
+    'dolphin'
+    'kio-extras'
+    'kate'
+    'ark'
+    'gwenview'
+    'okular'
+    'udisks2'
+    'flatpak'
+    'xdg-user-dirs'
+    'xdg-utils'
+    'noto-fonts'
+    'noto-fonts-emoji'
+    'ttf-liberation'
+    'ttf-dejavu'
+    'firefox'
+    'alsa-utils'
+    'pipewire'
+    'pipewire-pulse'
+    'pipewire-alsa'
+    'wireplumber'
+    'bluez'
+    'bluez-utils'
+    'power-profiles-daemon'
+    'vulkan-intel'
+    'vulkan-radeon'
+    'intel-media-driver'
+    'libva-intel-driver'
+    'networkmanager'
+    'wpa_supplicant'
+    'wireless-regdb'
+    'iw'
+    'sof-firmware'
+    'mesa'
+)
+
+package() {
+    install -Dm644 /dev/null "$pkgdir/usr/share/soraos/desktop-meta"
+}

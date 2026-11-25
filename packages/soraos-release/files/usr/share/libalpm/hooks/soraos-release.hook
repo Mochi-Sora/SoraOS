@@ -1,0 +1,10 @@
+[Trigger]
+Type = Package
+Operation = Upgrade
+Target = filesystem
+
+[Action]
+Description = Restoring SoraOS release identity...
+When = PostTransaction
+Depends = soraos-release
+Exec = /usr/lib/soraos/write-release

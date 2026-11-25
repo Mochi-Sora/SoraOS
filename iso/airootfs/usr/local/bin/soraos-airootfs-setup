@@ -1,29 +1,18 @@
 #!/usr/bin/env bash
 # One-shot live-image configuration. Runs inside the airootfs chroot during
 # the ISO build, from 90-soraos-setup.hook, and removes itself afterwards.
+#
+# Distribution identity, branding, pacman repo wiring, and user defaults are
+# owned by the soraos-* packages (M2). This hook only creates the live session
+# account and enables the live-only services.
 set -euo pipefail
 
-# --- Distribution identity -------------------------------------------------
-# filesystem owns /usr/lib/os-release and /etc/issue, so these are written
-# after package installation rather than shipped through the airootfs overlay.
-cat > /usr/lib/os-release <<'EOF'
-NAME="SoraOS"
-PRETTY_NAME="SoraOS"
-ID=soraos
-ID_LIKE=arch
-BUILD_ID=rolling
-ANSI_COLOR="38;2;122;162;247"
-HOME_URL="https://mochi-sora.github.io/SoraOfficialWebsite/"
-SUPPORT_URL="https://github.com/Mochi-Sora"
-BUG_REPORT_URL="https://github.com/Mochi-Sora"
-LOGO=soraos
-EOF
-
-ln -sfn ../usr/lib/os-release /etc/os-release
-
-cat > /etc/issue <<'EOF'
-SoraOS \r (\l)
-EOF
+# --- Distribution identity and repository wiring -----------------------------
+# mkarchiso uses pacstrap -N, so package .install scriptlets are skipped in
+# the live build. Apply the package-owned helpers explicitly here. Installed
+# systems still get them from soraos-release.install.
+/usr/lib/soraos/write-release
+/usr/lib/soraos/add-repo
 
 # --- Live session account --------------------------------------------------
 # The live medium is intentionally passwordless: Plasma Login Manager
@@ -41,11 +30,6 @@ cat > /etc/sudoers.d/10-sora-live <<'EOF'
 %wheel ALL=(ALL:ALL) NOPASSWD: ALL
 EOF
 chmod 0440 /etc/sudoers.d/10-sora-live
-
-# --- Pacman configuration --------------------------------------------------
-# pacman owns /etc/pacman.conf, so install the SoraOS copy after the package
-# transaction instead of relying on the profile overlay.
-install -m 0644 /etc/soraos/pacman.conf /etc/pacman.conf
 
 # --- Services --------------------------------------------------------------
 systemctl enable \

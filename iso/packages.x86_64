@@ -1,6 +1,13 @@
-# SoraOS live image package set (M1)
+# SoraOS live image package set (M2a)
 # Keep this list lean and intentional. The installed system is produced by
 # Calamares in a later milestone, not by copying this image.
+
+# SoraOS product packages (served from the local [soraos] repo in M2a)
+soraos-keyring
+soraos-mirrorlist
+soraos-release
+soraos-branding
+soraos-desktop-meta
 
 # Base system
 base

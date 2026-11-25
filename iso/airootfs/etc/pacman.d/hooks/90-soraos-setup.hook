@@ -15,4 +15,6 @@ Depends = sudo
 Depends = plasma-login-manager
 Depends = networkmanager
 Depends = bluez
+Depends = soraos-release
+Depends = soraos-branding
 Exec = /bin/bash /usr/local/bin/soraos-airootfs-setup

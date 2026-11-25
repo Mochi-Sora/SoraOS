@@ -7,12 +7,16 @@
 
 # Build-time secrets (Secure Boot signing keys, repo signing keys)
 /secureboot/keys/
-/repo/keys/
+/repo/
+
+# Staged local package repo inside the ISO profile
+/iso/airootfs/opt/soraos/repo/
 
 # Local package build output
 packages/**/pkg/
 packages/**/src/
 *.pkg.tar.zst
+*.pkg.tar.zst.sig
 
 # Editor/OS noise
 *.swp

@@ -1,15 +1,59 @@
-# Testing the SoraOS live image
+# Testing SoraOS
 
 ## What the build produces
 
 ```
+repo/x86_64/*.pkg.tar.zst
+repo/x86_64/*.pkg.tar.zst.sig
+repo/x86_64/soraos.db.tar.gz
+repo/x86_64/soraos.db.tar.gz.sig
 out/soraos-YYYY.MM.DD-x86_64.iso
 out/soraos-YYYY.MM.DD-x86_64.iso.sha256
 ```
 
 `make check` must pass before a build is considered valid. It resolves every
-package against the sync databases, verifies the LTS kernel names in both boot
-loaders, and confirms the build-time and live `pacman.conf` have not drifted.
+package (including the local `soraos-*` sources), verifies the LTS kernel names
+in both boot loaders, checks the live setup wiring, and confirms the installed
+branding matches the sources. It does not replace `build-repo.sh`'s signature
+verification.
+
+## Repository checks
+
+Run these on the build host before booting anything:
+
+```bash
+./scripts/gen-test-key.sh   # only if repo/keys/keyid does not exist yet
+make repo
+```
+
+Expected:
+
+- `repo/x86_64` contains five packages, `soraos.db.tar.gz`, `soraos.files.tar.gz`,
+  and a detached `.sig` for each package and database.
+- `build-repo.sh` ends with all `gpg --verify` calls succeeding.
+- `repo/keys/` and `repo/x86_64/` do not appear in `git status`; only the public
+  keyring under `packages/soraos-keyring/files/` is committed.
+
+Verify independently with the repository keyring:
+
+```bash
+GNUPGHOME=repo/keys/gnupg gpg --verify \
+  repo/x86_64/soraos.db.tar.gz.sig repo/x86_64/soraos.db.tar.gz
+GNUPGHOME=repo/keys/gnupg gpg --verify \
+  repo/x86_64/soraos.files.tar.gz.sig repo/x86_64/soraos.files.tar.gz
+for sig in repo/x86_64/*.pkg.tar.zst.sig; do
+  GNUPGHOME=repo/keys/gnupg gpg --verify "$sig" "${sig%.sig}"
+done
+```
+
+After `make iso`, confirm the staged copy was removed from the working tree:
+
+```bash
+test ! -e iso/airootfs/opt/soraos/repo
+```
+
+The repository is still inside the ISO because it was staged while `mkarchiso`
+copied the airootfs.
 
 ## Boot matrix
 
@@ -39,10 +83,32 @@ Run these inside the live desktop unless noted otherwise.
 - [ ] Firmware menu shows **SoraOS Live** with the SoraOS splash on BIOS.
 - [ ] systemd-boot menu appears within 5 seconds and boots the LTS entry.
 - [ ] No `systemd-firstboot` prompt appears; boot reaches the greeter directly.
-- [ ] Plymouth is not configured; boot messages are acceptable for M1.
+- [ ] Plymouth is not configured; boot messages are acceptable for M2a.
 - [ ] `cat /etc/os-release` shows `ID=soraos`, `ID_LIKE=arch`.
 - [ ] `hostnamectl` reports `soraos`.
 - [ ] `uname -r` ends in `-lts`.
+- [ ] `pacman -Q soraos-keyring soraos-mirrorlist soraos-release soraos-branding soraos-desktop-meta`
+      lists all five packages.
+
+### Signed [soraos] repository
+
+- [ ] `pacman-key --list-keys` includes the **SoraOS Test Repository** key.
+- [ ] `pacman -Sl soraos` lists all five `soraos-*` packages.
+- [ ] `sudo pacman -Sy` exits 0 without a keyring or signature error.
+- [ ] `/etc/pacman.conf` contains `[soraos]` with
+      `SigLevel = Required DatabaseOptional` and
+      `Include = /etc/pacman.d/soraos-mirrorlist`.
+- [ ] `pacman -Qi soraos-release` reports the `soraos` repository.
+- [ ] `pacman -Qkk soraos-branding` reports no altered files.
+- [ ] `pacman -Qo /usr/share/wallpapers/SoraOS/metadata.json` and
+      `pacman -Qo /etc/skel/.config/kdeglobals` both report `soraos-branding`.
+- [ ] `pacman -Qo /usr/share/soraos/os-release` reports `soraos-release`,
+      and `/usr/lib/os-release` carries the SoraOS identity written by its helper.
+- [ ] Reinstalling a signed package verifies against the live keyring:
+      `sudo pacman -U /opt/soraos/repo/x86_64/soraos-mirrorlist-*.pkg.tar.zst`.
+
+The `file:///opt/soraos/repo/x86_64` source is expected in M2a. A hosted mirror
+arrives in M2b.
 
 ### Session
 
@@ -73,7 +139,6 @@ Run these inside the live desktop unless noted otherwise.
 
 - [ ] `findmnt /` shows the squashfs + overlay, not a physical disk.
 - [ ] Writing a file to `$HOME` works (CoW space is 4 GiB).
-- [ ] `pacman -Sy` works without a keyring error (pacman-init ran).
 - [ ] `journalctl --no-pager -b -p err` has no SoraOS-induced errors.
 - [ ] In QEMU, a failed `systemd-loop@...-sr0.service` is expected: systemd-dissect
       scans the emulated CD-ROM and finds no partitions.
@@ -91,11 +156,15 @@ Without any audio hardware the speech units are expected to fail.
 
 ## Release checks
 
+- [ ] `make check` and `make repo` pass, including every signature verification.
 - [ ] `sha256sum -c out/*.iso.sha256` passes.
 - [ ] ISO label is `SORAOS_YYYYMM` (`xorriso -indev out/*.iso -pvd_info | grep -i 'Volume id'`).
 - [ ] The ISO boots in QEMU with 2 GiB RAM.
 - [ ] The ISO boots on real UEFI hardware with Secure Boot **disabled**.
+- [ ] The live session can complete `sudo pacman -Sy` and `pacman -Sl soraos`.
 - [ ] Known limitations in `README.md` are still accurate.
+- [ ] **Do not call this a public release**: the repo key is a test key and the
+      mirror is `file:///opt/soraos/repo/$arch`.
 
 ## Failure triage
 
@@ -110,4 +179,10 @@ Without any audio hardware the speech units are expected to fail.
 | Speech entry: `Unable to locate executable '/usr/local/bin/livecd-sound': Permission denied` | `mkarchiso` does not preserve modes; list the script as `0:0:755` in `file_permissions` |
 | Speech entry: `livecd-talk` fails but the desktop is fine | QEMU without a sound card; add `-device intel-hda -device hda-duplex` or retest on hardware |
 | No network | NetworkManager unit not enabled or firmware package missing |
-| Secure Boot rejects the ISO | expected; the M1 image is unsigned |
+| `make repo` says `no signing key` | run `./scripts/gen-test-key.sh` or set `SORAOS_GNUPGHOME` |
+| Build fails with `key ... is unknown` | the build-only pacman config did not add `[soraos]`, or a stale `iso/pacman.conf` was used; check `scripts/build.sh` |
+| Build fails with `target not found: soraos-*` | `repo/x86_64` is missing or the staged repository was not copied; run `make repo` and retry |
+| Live `pacman -Sy` says a key is unknown | `pacman-init.service` failed or `soraos-keyring` is absent; run `sudo pacman-key --populate soraos` and inspect the unit |
+| `pacman -U` reports an invalid signature | repository and ISO were built with different keys, or the live keyring is stale; rebuild the repo and ISO |
+| A `soraos-*` package is missing from `pacman -Sl soraos` | the staged repository is incomplete; rerun `make repo` and rebuild the ISO |
+| Secure Boot rejects the ISO | expected; the live image is unsigned, and package signing does not sign the boot chain |

@@ -2,13 +2,20 @@
 
 ## Current state
 
-The M1 ISO is **unsigned**. Firmware with Secure Boot enabled will refuse to
-boot it, exactly as it does with the official Arch ISO. For M1, Secure Boot
-must be disabled or set to setup mode.
+The M2a ISO is **unsigned**. The `[soraos]` packages are signed for pacman,
+but those signatures cover no EFI binary and firmware does not trust them.
+With Secure Boot enabled the ISO is refused, exactly as the official Arch ISO
+is. Secure Boot must be disabled or set to setup mode.
 
-Secure Boot is nevertheless a first-class requirement for SoraOS, not an
-afterthought. This document records the options and the planned path so the
-build and release pipeline can be shaped around it now.
+Package signing and boot signing are separate:
+
+- `soraos-keyring` lets pacman verify `[soraos]` packages;
+- Secure Boot needs a signed boot chain (bootloader and kernel or UKI) and a
+  certificate enrolled in firmware `db`.
+
+Secure Boot is an **optional M4 milestone**, not a prerequisite for M2 or M3.
+If it is descoped, "Secure Boot off" remains the documented requirement. This
+document records the options and the planned path in case it is pursued.
 
 ## What "Secure Boot on" requires
 
@@ -56,11 +63,11 @@ recommended for this project.
 
 ## Recommended plan
 
-1. **M1/M2:** keep the ISO unsigned; document that Secure Boot must be off.
-   Do not block the live/install work on signing.
-2. **M3:** ship Calamares and the installable system unsigned; signing does
-   not block the installer milestone.
-3. **M4:** add `secureboot/` tooling:
+1. **M0–M2a (done):** ship an unsigned ISO; sign `[soraos]` packages only for
+   pacman repository trust. Do not block live-image work on boot signing.
+2. **M2b/M3:** keep boot signing out of scope. Calamares and the installable system
+   remain unsigned; boot signing does not block the installer milestone.
+3. **M4 (optional):** add `secureboot/` tooling:
    - `secureboot-keygen.sh` — create `db.key`/`db.crt` offline, gitignored.
    - `secureboot-sign.sh` — sign the EFI bootloader and kernel/UKI after the
      package transaction, without copying private keys into the airootfs.
@@ -73,21 +80,23 @@ recommended for this project.
 
 - **Private keys never enter the repository, the airootfs, or the ISO.**
   Sign on the build host or in CI, using a secret mount or hardware token.
+  Never reuse the `[soraos]` package signing key for Secure Boot.
 - Sign **after** pacman has installed the exact kernel/bootloader versions
   used in the image. Version skew between a signed kernel and its modules is a
   boot failure.
 - Prefer a **Unified Kernel Image** (kernel + initramfs + cmdline in one PE
   binary) for the installed system: one signature covers the whole early boot
   path and works cleanly with `systemd-boot` and `sbctl`.
-- Keep the public certificate and enrollment instructions in
-  `soraos-keyring`/docs so users can verify what they are trusting.
+- Keep the public Secure Boot certificate and enrollment instructions in
+  the docs (and a dedicated package if one is added); keep it distinct from
+  the package repository keyring.
 - Re-sign every kernel and bootloader update. On an installed system this is a
   pacman hook; on the ISO it is part of the release build.
 
 ## Testing Secure Boot
 
-`run_archiso -s` boots OVMF with Secure Boot enabled. An unsigned ISO is
-expected to fail. To test a signed image:
+`run_archiso -s` boots OVMF with Secure Boot enabled. The current unsigned
+M2a ISO is expected to fail. To test a future signed image:
 
 1. Boot a Linux VM with OVMF and enroll `db.crt` into the firmware `db`
    (`sbctl enroll-keys --microsoft` or firmware setup).

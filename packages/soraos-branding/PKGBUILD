@@ -1,0 +1,13 @@
+pkgname=soraos-branding
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='SoraOS wallpapers, look-and-feel, color scheme, icons, and user defaults'
+arch=('any')
+url='https://github.com/Mochi-Sora/SoraOS'
+license=('AGPL-3.0-only')
+options=('!strip')
+
+package() {
+    install -d "$pkgdir"
+    cp -a "$startdir/files/." "$pkgdir/"
+}

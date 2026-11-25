@@ -1,0 +1,11 @@
+pkgname=soraos-mirrorlist
+pkgver=0.1.0
+pkgrel=1
+pkgdesc='SoraOS repository mirror list'
+arch=('any')
+url='https://github.com/Mochi-Sora/SoraOS'
+license=('AGPL-3.0-only')
+
+package() {
+    install -Dm644 "$startdir/files/etc/pacman.d/soraos-mirrorlist" "$pkgdir/etc/pacman.d/soraos-mirrorlist"
+}

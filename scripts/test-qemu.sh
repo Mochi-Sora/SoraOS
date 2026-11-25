@@ -38,8 +38,8 @@ if ((SECUREBOOT)) && ! command -v run_archiso >/dev/null 2>&1; then
 fi
 
 if ((SECUREBOOT)); then
-    echo "warning: the M1 ISO is unsigned. Secure Boot will reject it until the"
-    echo "         signing pipeline in docs/secureboot.md lands." >&2
+    echo "warning: the live ISO is unsigned. Secure Boot will reject it until"
+    echo "         the boot-signing pipeline in docs/secureboot.md lands." >&2
 fi
 
 if command -v run_archiso >/dev/null 2>&1; then

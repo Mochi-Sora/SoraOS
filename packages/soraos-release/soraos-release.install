@@ -1,0 +1,9 @@
+post_install() {
+    /usr/lib/soraos/write-release
+    /usr/lib/soraos/add-repo
+}
+
+post_upgrade() {
+    /usr/lib/soraos/write-release
+    /usr/lib/soraos/add-repo
+}

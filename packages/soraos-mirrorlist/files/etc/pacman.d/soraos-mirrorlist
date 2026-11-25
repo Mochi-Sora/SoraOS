@@ -1,0 +1,4 @@
+# SoraOS repository mirror list (M2a local development).
+# The live ISO carries this repository at /opt/soraos/repo/$arch.
+# Replace this with a hosted mirror before publishing.
+Server = file:///opt/soraos/repo/$arch

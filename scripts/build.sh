@@ -11,6 +11,8 @@ PROFILE="$ROOT/iso"
 WORK="$ROOT/work"
 OUT="$ROOT/out"
 ENGINE="auto"
+REPO_DIR="$ROOT/repo/x86_64"
+STAGED_REPO="$PROFILE/airootfs/opt/soraos/repo"
 
 usage() {
     cat <<'EOF'
@@ -51,11 +53,34 @@ export SOURCE_DATE_EPOCH
 
 mkdir -p "$OUT" "$ROOT/.cache/pacman/pkg"
 
+# M2a: build, sign, and stage the local [soraos] repository. Set
+# SORAOS_SKIP_REPO=1 to reuse an existing repo during ISO-only iteration.
+if [[ "${SORAOS_SKIP_REPO:-0}" != "1" ]]; then
+    "$ROOT/scripts/build-repo.sh"
+fi
+[[ -d "$REPO_DIR" ]] || die "missing $REPO_DIR; run scripts/build-repo.sh"
+
+rm -rf "$STAGED_REPO"
+mkdir -p "$STAGED_REPO"
+cp -a "$REPO_DIR" "$STAGED_REPO/"
+cleanup_staged_repo() { rm -rf "$STAGED_REPO"; }
+trap cleanup_staged_repo EXIT
+
 # Rootless builds cannot write the host's /var/cache/pacman/pkg. Give mkarchiso
 # a build-only pacman config with a repo-local cache.
 BUILD_PACMAN_CONF="$ROOT/.cache/pacman.conf"
 sed "/^\[options\]/a CacheDir = $ROOT/.cache/pacman/pkg" \
     "$PROFILE/pacman.conf" >"$BUILD_PACMAN_CONF"
+# The build host does not trust the local test key; build-repo.sh verifies
+# every package and the database signature. The live system uses Required.
+printf '\n[soraos]\nSigLevel = Never\nServer = file://%s\n' \
+    "$REPO_DIR" >>"$BUILD_PACMAN_CONF"
+
+# The container sees the checkout under /build, not at the host path.
+CONTAINER_PACMAN_CONF="$ROOT/.cache/pacman-container.conf"
+cp "$PROFILE/pacman.conf" "$CONTAINER_PACMAN_CONF"
+printf '\n[soraos]\nSigLevel = Never\nServer = file:///build/repo/x86_64\n' \
+    >>"$CONTAINER_PACMAN_CONF"
 
 # Never silently reuse a stale work directory: mkarchiso's -r only removes a
 # work directory it created itself.
@@ -89,7 +114,7 @@ run_container() {
         bash -lc '
             set -euo pipefail
             pacman -Syu --noconfirm --needed archiso
-            mkarchiso -v -r -w /build/work -o /build/out /build/iso
+            mkarchiso -v -r -C /build/.cache/pacman-container.conf -w /build/work -o /build/out /build/iso
         '
 }
 

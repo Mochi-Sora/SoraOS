@@ -1,0 +1,7 @@
+#!/bin/sh
+# Keep the SoraOS repository available without replacing pacman's config.
+set -eu
+
+if ! grep -q '^\[soraos\]' /etc/pacman.conf; then
+    printf '\n[soraos]\nSigLevel = Required DatabaseOptional\nInclude = /etc/pacman.d/soraos-mirrorlist\n' >> /etc/pacman.conf
+fi

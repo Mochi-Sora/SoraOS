@@ -1,0 +1,8 @@
+#!/bin/sh
+# Reapply the SoraOS identity after filesystem overrides the stock files.
+set -eu
+
+install -Dm644 /usr/share/soraos/os-release /usr/lib/os-release
+install -Dm644 /usr/share/soraos/issue /etc/issue
+install -Dm644 /usr/share/soraos/lsb-release /etc/lsb-release
+ln -sfn ../usr/lib/os-release /etc/os-release

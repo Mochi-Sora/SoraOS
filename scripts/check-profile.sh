@@ -38,18 +38,23 @@ for mode in "${bootmodes[@]}"; do
 done
 
 echo "== package list =="
+local_pkgs=(soraos-keyring soraos-mirrorlist soraos-release soraos-branding soraos-desktop-meta)
 if command -v pacman >/dev/null 2>&1; then
     mapfile -t pkgs < <(sed '/^\s*#/d;/^\s*$/d' iso/packages.x86_64)
     missing=()
     for pkg in "${pkgs[@]}"; do
-        pacman -Si "$pkg" >/dev/null 2>&1 || missing+=("$pkg")
+        if printf '%s\n' "${local_pkgs[@]}" | grep -qx "$pkg"; then
+            [[ -f "packages/$pkg/PKGBUILD" ]] || missing+=("$pkg (missing local PKGBUILD)")
+        else
+            pacman -Si "$pkg" >/dev/null 2>&1 || missing+=("$pkg")
+        fi
     done
     if ((${#missing[@]})); then
-        bad "packages not found in the sync DB: ${missing[*]}"
+        bad "packages not found: ${missing[*]}"
     else
-        note "${#pkgs[@]} packages resolve"
+        note "${#pkgs[@]} packages resolve (including local soraos-*)"
     fi
-    for required in linux-lts mkinitcpio mkinitcpio-archiso plasma-meta plasma-login-manager syslinux; do
+    for required in linux-lts mkinitcpio mkinitcpio-archiso plasma-meta plasma-login-manager syslinux soraos-desktop-meta; do
         if printf '%s\n' "${pkgs[@]}" | grep -qx "$required"; then
             note "required package $required"
         else
@@ -115,11 +120,6 @@ else
 fi
 
 echo "== pacman config =="
-if cmp -s iso/pacman.conf iso/airootfs/etc/soraos/pacman.conf; then
-    note "build and live pacman.conf are identical"
-else
-    bad "iso/pacman.conf and iso/airootfs/etc/soraos/pacman.conf differ"
-fi
 if grep -q '^\[core\]' iso/pacman.conf; then
     note "core repo enabled"
 else
@@ -129,6 +129,68 @@ if grep -q '^\[extra\]' iso/pacman.conf; then
     note "extra repo enabled"
 else
     bad "extra repo missing"
+fi
+if grep -q '\[soraos\]' scripts/build.sh \
+    && grep -q 'SigLevel = Never' scripts/build.sh; then
+    note "build config adds the local soraos repo"
+else
+    bad "scripts/build.sh does not add the local soraos repo"
+fi
+if grep -q 'pacman-key --populate soraos' iso/airootfs/etc/systemd/system/pacman-init.service; then
+    note "pacman-init trusts the soraos keyring"
+else
+    bad "pacman-init does not populate the soraos keyring"
+fi
+if grep -q '/usr/lib/soraos/write-release' iso/airootfs/usr/local/bin/soraos-airootfs-setup \
+    && grep -q '/usr/lib/soraos/add-repo' iso/airootfs/usr/local/bin/soraos-airootfs-setup; then
+    note "live setup applies the package-owned release/repo helpers"
+else
+    bad "live setup does not apply the release/repo helpers (pacstrap -N skips .install)"
+fi
+
+echo "== local repo =="
+for pkg in "${local_pkgs[@]}"; do
+    if [[ -f "packages/$pkg/PKGBUILD" ]]; then
+        note "package source $pkg"
+    else
+        bad "missing packages/$pkg/PKGBUILD"
+    fi
+done
+for script in scripts/build-repo.sh scripts/gen-test-key.sh; do
+    if [[ -x "$script" ]]; then
+        note "$script is executable"
+    else
+        bad "$script is missing or not executable"
+    fi
+done
+keyring_file="packages/soraos-keyring/files/usr/share/pacman/keyrings/soraos.gpg"
+if [[ -s "$keyring_file" ]]; then
+    note "public repo keyring is present"
+else
+    bad "missing $keyring_file (run scripts/gen-test-key.sh)"
+fi
+mirrorlist="packages/soraos-mirrorlist/files/etc/pacman.d/soraos-mirrorlist"
+if [[ -f "$mirrorlist" ]] && grep -q '^Server = ' "$mirrorlist"; then
+    note "soraos mirrorlist has a server entry"
+else
+    bad "missing or empty $mirrorlist"
+fi
+for path in \
+    packages/soraos-release/files/usr/lib/soraos/write-release \
+    packages/soraos-release/files/usr/lib/soraos/add-repo \
+    packages/soraos-release/files/usr/share/libalpm/hooks/soraos-release.hook \
+    packages/soraos-release/files/usr/share/libalpm/hooks/soraos-repo.hook \
+    packages/soraos-release/soraos-release.install; do
+    if [[ -f "$path" ]]; then
+        note "$path"
+    else
+        bad "missing $path"
+    fi
+done
+if grep -qx 'soraos-desktop-meta' iso/packages.x86_64; then
+    note "live image installs soraos-desktop-meta"
+else
+    bad "iso/packages.x86_64 does not install soraos-desktop-meta"
 fi
 
 echo "== live image =="
@@ -142,10 +204,10 @@ for path in \
     iso/airootfs/etc/systemd/system/etc-pacman.d-gnupg.mount \
     iso/airootfs/etc/systemd/system/livecd-talk.service \
     iso/airootfs/usr/local/bin/livecd-sound \
-    iso/airootfs/usr/share/wallpapers/SoraOS/metadata.json \
-    iso/airootfs/usr/share/wallpapers/SoraOS/contents/images/3840x2160.png \
-    iso/airootfs/usr/share/color-schemes/SoraOS.colors \
-    iso/airootfs/usr/share/plasma/look-and-feel/org.soraos.desktop/metadata.json \
+    packages/soraos-branding/files/usr/share/wallpapers/SoraOS/metadata.json \
+    packages/soraos-branding/files/usr/share/wallpapers/SoraOS/contents/images/3840x2160.png \
+    packages/soraos-branding/files/usr/share/color-schemes/SoraOS.colors \
+    packages/soraos-branding/files/usr/share/plasma/look-and-feel/org.soraos.desktop/metadata.json \
     iso/syslinux/splash.png; do
     if [[ -e "$path" ]]; then
         note "$path"
@@ -166,30 +228,30 @@ else
 fi
 
 plm_image="$(sed -n 's|^Image=file://||p' iso/airootfs/etc/plasmalogin.conf | head -1)"
-if [[ -n "$plm_image" && -f "iso/airootfs$plm_image" ]]; then
-    note "greeter wallpaper exists: $plm_image"
+if [[ -n "$plm_image" && -f "packages/soraos-branding/files$plm_image" ]]; then
+    note "greeter wallpaper exists in soraos-branding: $plm_image"
 else
-    bad "greeter wallpaper missing: ${plm_image:-unset}"
+    bad "greeter wallpaper missing from soraos-branding: ${plm_image:-unset}"
 fi
 
 laf_id="$(sed -n 's/.*"Id": "\([^"]*\)".*/\1/p' \
-    iso/airootfs/usr/share/plasma/look-and-feel/org.soraos.desktop/metadata.json | head -1)"
-if [[ -n "$laf_id" ]] && grep -q "LookAndFeelPackage=$laf_id" iso/airootfs/etc/skel/.config/kdeglobals; then
+    packages/soraos-branding/files/usr/share/plasma/look-and-feel/org.soraos.desktop/metadata.json | head -1)"
+if [[ -n "$laf_id" ]] && grep -q "LookAndFeelPackage=$laf_id" packages/soraos-branding/files/etc/skel/.config/kdeglobals; then
     note "skel selects look-and-feel $laf_id"
 else
     bad "skel look-and-feel does not match the installed package (${laf_id:-unset})"
 fi
 
-color_scheme="iso/airootfs/usr/share/color-schemes/SoraOS.colors"
+color_scheme="packages/soraos-branding/files/usr/share/color-schemes/SoraOS.colors"
 if grep -q '^ColorScheme=SoraOS$' "$color_scheme" \
-    && grep -q '^ColorScheme=SoraOS$' iso/airootfs/etc/skel/.config/kdeglobals \
-    && grep -q '^ColorScheme=SoraOS$' iso/airootfs/usr/share/plasma/look-and-feel/org.soraos.desktop/contents/defaults; then
+    && grep -q '^ColorScheme=SoraOS$' packages/soraos-branding/files/etc/skel/.config/kdeglobals \
+    && grep -q '^ColorScheme=SoraOS$' packages/soraos-branding/files/usr/share/plasma/look-and-feel/org.soraos.desktop/contents/defaults; then
     note "skel and look-and-feel select the SoraOS color scheme"
 else
     bad "SoraOS color scheme is not selected in skel and look-and-feel"
 fi
-if grep -q '^AccentColor=122,162,247$' iso/airootfs/etc/skel/.config/kdeglobals \
-    && grep -q '^AccentColor=122,162,247$' iso/airootfs/usr/share/plasma/look-and-feel/org.soraos.desktop/contents/defaults; then
+if grep -q '^AccentColor=122,162,247$' packages/soraos-branding/files/etc/skel/.config/kdeglobals \
+    && grep -q '^AccentColor=122,162,247$' packages/soraos-branding/files/usr/share/plasma/look-and-feel/org.soraos.desktop/contents/defaults; then
     note "accent color is the SoraPlatform blue"
 else
     bad "accent color is not 122,162,247 in skel and look-and-feel"
@@ -208,8 +270,8 @@ else
 fi
 
 echo "== branding =="
-if cmp -s branding/sora-mark.svg iso/airootfs/usr/share/icons/hicolor/scalable/apps/soraos.svg \
-    && cmp -s branding/sora-mark.svg iso/airootfs/usr/share/pixmaps/soraos.svg; then
+if cmp -s branding/sora-mark.svg packages/soraos-branding/files/usr/share/icons/hicolor/scalable/apps/soraos.svg \
+    && cmp -s branding/sora-mark.svg packages/soraos-branding/files/usr/share/pixmaps/soraos.svg; then
     note "installed icons match branding/sora-mark.svg"
 else
     bad "installed icons are stale; run scripts/build-branding.sh"
@@ -219,17 +281,17 @@ if grep -q 'C 690 245' branding/sora-mark.svg; then
 else
     bad "branding/sora-mark.svg is not the SoraPlatform S mark"
 fi
-if grep -Rq 'M11 17h11v13h20V17h11v30H42V39H22v8H11V17Z' branding iso/airootfs; then
+if grep -RqI 'M11 17h11v13h20V17h11v30H42V39H22v8H11V17Z' branding packages iso/airootfs; then
     bad "website placeholder H mark is still present"
 else
     note "placeholder H mark is gone"
 fi
-if grep -RqI '#e789a0' branding iso/airootfs iso/syslinux README.md; then
+if grep -RqI '#e789a0' branding packages iso/airootfs iso/syslinux README.md; then
     bad "old pink palette (#e789a0) is still present"
 else
     note "branding uses the SoraPlatform palette"
 fi
-if grep -q 'ANSI_COLOR="38;2;122;162;247"' iso/airootfs/usr/local/bin/soraos-airootfs-setup; then
+if grep -q 'ANSI_COLOR="38;2;122;162;247"' packages/soraos-release/files/usr/share/soraos/os-release; then
     note "os-release accent is platform blue"
 else
     bad "os-release ANSI_COLOR is not the platform blue"
@@ -272,8 +334,10 @@ while IFS= read -r script; do
     else
         bad "bash -n $script"
     fi
-done < <(find scripts iso/airootfs/usr/local/bin -type f \
-    \( -name '*.sh' -o -name 'soraos-airootfs-setup' -o -name 'livecd-sound' \) | sort)
+done < <(find scripts iso/airootfs/usr/local/bin packages \
+    \( -path '*/pkg' -o -path '*/src' \) -prune -o \
+    -type f \( -name '*.sh' -o -name '*.install' -o -name 'soraos-airootfs-setup' \
+       -o -name 'livecd-sound' -o -path '*/usr/lib/soraos/*' \) -print | sort)
 
 if command -v shellcheck >/dev/null 2>&1; then
     while IFS= read -r script; do
@@ -282,7 +346,9 @@ if command -v shellcheck >/dev/null 2>&1; then
         else
             bad "shellcheck $script"
         fi
-    done < <(find scripts -type f -name '*.sh' | sort)
+    done < <(find scripts packages \
+        \( -path '*/pkg' -o -path '*/src' \) -prune -o \
+        -type f \( -name '*.sh' -o -path '*/usr/lib/soraos/*' \) -print | sort)
 else
     echo "  skip    shellcheck not installed"
 fi

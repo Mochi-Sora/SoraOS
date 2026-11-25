@@ -1,6 +1,6 @@
 SHELL := /usr/bin/env bash
 
-.PHONY: all deps branding check iso run run-bios run-sb clean
+.PHONY: all deps branding check repo iso run run-bios run-sb clean
 
 all: check iso
 
@@ -12,6 +12,9 @@ branding:
 
 check:
 	@./scripts/check-profile.sh
+
+repo:
+	@./scripts/build-repo.sh
 
 iso:
 	@./scripts/build.sh
@@ -26,5 +29,5 @@ run-sb:
 	@./scripts/test-qemu.sh --uefi --secureboot
 
 clean:
-	@rm -rf work out
-	@echo "Removed work/ and out/."
+	@rm -rf work out repo/x86_64 iso/airootfs/opt/soraos/repo
+	@echo "Removed work/, out/, and the generated package repo."

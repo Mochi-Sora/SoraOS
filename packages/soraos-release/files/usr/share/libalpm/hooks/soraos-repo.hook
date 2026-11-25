@@ -1,0 +1,10 @@
+[Trigger]
+Type = Package
+Operation = Upgrade
+Target = pacman
+
+[Action]
+Description = Ensuring the SoraOS repository is configured...
+When = PostTransaction
+Depends = soraos-release
+Exec = /usr/lib/soraos/add-repo

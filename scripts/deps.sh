@@ -3,7 +3,7 @@
 # already present. This script does not install anything.
 set -euo pipefail
 
-packages=(archiso qemu-desktop edk2-ovmf librsvg)
+packages=(archiso qemu-desktop edk2-ovmf librsvg base-devel gnupg)
 echo "Install the build/test toolchain with:"
 echo
 echo "  sudo pacman -S --needed ${packages[*]}"
@@ -22,6 +22,9 @@ check mkarchiso "$(command -v mkarchiso || echo /usr/bin/mkarchiso)"
 check run_archiso "$(command -v run_archiso || echo /usr/bin/run_archiso)"
 check qemu "$(command -v qemu-system-x86_64 || echo /usr/bin/qemu-system-x86_64)"
 check rsvg-convert "$(command -v rsvg-convert || echo /usr/bin/rsvg-convert)"
+check makepkg "$(command -v makepkg || echo /usr/bin/makepkg)"
+check repo-add "$(command -v repo-add || echo /usr/bin/repo-add)"
+check gpg "$(command -v gpg || echo /usr/bin/gpg)"
 
 ovmf_code=""
 for candidate in \
@@ -38,3 +41,4 @@ check ovmf-code "${ovmf_code:-/usr/share/edk2/x64/OVMF_CODE.4m.fd}"
 echo
 echo "Note: archiso 92+ can run mkarchiso as a normal user through user"
 echo "namespaces. No sudo is needed for 'make iso' once archiso is installed."
+echo "The M2a package repo is built locally with makepkg/repo-add/gpg."
