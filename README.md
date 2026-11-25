@@ -74,7 +74,7 @@
 | Milestone | Scope | State |
 |---|---|---|
 | M0 | Repo skeleton, archiso 92 profile, build/test scripts | Done |
-| M1 | Branded KDE Plasma live ISO on linux-lts | Done — UEFI and BIOS validated in QEMU |
+| M1 | Branded KDE Plasma live ISO on linux-lts | Done — UEFI, BIOS, and speech entry validated in QEMU |
 | M2 | `soraos-*` packages, signed `[soraos]` repo, keyring, SoraAgent/SoraDesk | Next |
 | M3 | Calamares installer and installable system | Planned |
 | M4 | Secure Boot signing chain, CI, release automation | Planned |
@@ -156,7 +156,13 @@ SoraOS/
 
 ## SoraPlatform
 
-SoraOS is the operating-system layer of [SoraPlatform](https://github.com/Mochi-Sora), an umbrella of open-source, independent products built against telemetry and bloat. [SoraAgent](https://github.com/Mochi-Sora/SoraAgent) is the agent runtime; [SoraDesk](https://github.com/Mochi-Sora/SoraDesk) is its native desktop client; [SoraSkills](https://www.agensi.io/creators/mochi-sora) packages framework-agnostic agent skills on Agensi; and the official site lives at [SoraOfficialWebsite](https://github.com/Mochi-Sora/SoraOfficialWebsite).
+SoraOS is product 05 of [SoraPlatform](https://github.com/Mochi-Sora), an umbrella
+of open-source, independent products built against telemetry and bloat. It is the
+platform's operating-system layer. [SoraAgent](https://github.com/Mochi-Sora/SoraAgent)
+is the agent runtime; [SoraDesk](https://github.com/Mochi-Sora/SoraDesk) is its native
+desktop client; [SoraSkills](https://www.agensi.io/creators/mochi-sora) packages
+framework-agnostic agent skills on Agensi; and the official site lives at
+[SoraOfficialWebsite](https://github.com/Mochi-Sora/SoraOfficialWebsite).
 
 ## License
 
