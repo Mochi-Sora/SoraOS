@@ -1,0 +1,30 @@
+pkgname=sora-desk-bridge
+pkgver=0.2.3
+pkgrel=1
+pkgdesc='Local WebSocket bridge between SoraDesk and SoraAgent'
+arch=('any')
+url='https://github.com/Mochi-Sora/SoraDesk'
+license=('AGPL-3.0-only')
+depends=('python' 'python-websockets' 'sora-agent')
+makedepends=('python-build' 'python-installer' 'python-setuptools' 'python-wheel')
+source=("sora-desk-$pkgver.tar.gz::https://github.com/Mochi-Sora/SoraDesk/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('b3b6c9e3e76de7bcb8cbaf30d72af89b238b0894dec927b59044b80dc316f661')
+
+prepare() {
+    cd "SoraDesk-$pkgver/bridge"
+    # Arch ships websockets 17.x. The bridge smoke suite passes on 17.2, so
+    # widen the upstream guard instead of pinning a second websockets tree.
+    sed -i 's/websockets>=15,<17/websockets>=15,<18/' pyproject.toml
+}
+
+build() {
+    cd "SoraDesk-$pkgver/bridge"
+    python -m build --wheel --no-isolation
+}
+
+package() {
+    cd "SoraDesk-$pkgver/bridge"
+    python -m installer --destdir="$pkgdir" dist/*.whl
+    install -Dm644 ../LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+    install -Dm644 ../NOTICE "$pkgdir/usr/share/licenses/$pkgname/NOTICE"
+}

@@ -38,7 +38,7 @@ for mode in "${bootmodes[@]}"; do
 done
 
 echo "== package list =="
-local_pkgs=(soraos-keyring soraos-mirrorlist soraos-release soraos-branding soraos-desktop-meta)
+local_pkgs=(soraos-keyring soraos-mirrorlist soraos-release soraos-branding soraos-desktop-meta python-questionary sora-agent sora-desk sora-desk-bridge)
 if command -v pacman >/dev/null 2>&1; then
     mapfile -t pkgs < <(sed '/^\s*#/d;/^\s*$/d' iso/packages.x86_64)
     missing=()
@@ -54,7 +54,7 @@ if command -v pacman >/dev/null 2>&1; then
     else
         note "${#pkgs[@]} packages resolve (including local soraos-*)"
     fi
-    for required in linux-lts mkinitcpio mkinitcpio-archiso plasma-meta plasma-login-manager syslinux soraos-desktop-meta; do
+    for required in linux-lts mkinitcpio mkinitcpio-archiso plasma-meta plasma-login-manager syslinux soraos-desktop-meta sora-agent sora-desk sora-desk-bridge; do
         if printf '%s\n' "${pkgs[@]}" | grep -qx "$required"; then
             note "required package $required"
         else
@@ -156,7 +156,7 @@ for pkg in "${local_pkgs[@]}"; do
         bad "missing packages/$pkg/PKGBUILD"
     fi
 done
-for script in scripts/build-repo.sh scripts/gen-test-key.sh; do
+for script in scripts/build-repo.sh scripts/gen-test-key.sh scripts/publish-mirror.sh; do
     if [[ -x "$script" ]]; then
         note "$script is executable"
     else
@@ -175,22 +175,50 @@ if [[ -f "$mirrorlist" ]] && grep -q '^Server = ' "$mirrorlist"; then
 else
     bad "missing or empty $mirrorlist"
 fi
+if grep -Fq "Server = https://mochi-sora.github.io/SoraOfficialWebsite/repo/\$arch" "$mirrorlist" \
+    && grep -Fq "Server = file:///opt/soraos/repo/\$arch" "$mirrorlist"; then
+    note "soraos mirrorlist has the hosted and local servers"
+else
+    bad "$mirrorlist must list the hosted mirror and the on-medium fallback"
+fi
 for path in \
     packages/soraos-release/files/usr/lib/soraos/write-release \
     packages/soraos-release/files/usr/lib/soraos/add-repo \
     packages/soraos-release/files/usr/share/libalpm/hooks/soraos-release.hook \
     packages/soraos-release/files/usr/share/libalpm/hooks/soraos-repo.hook \
-    packages/soraos-release/soraos-release.install; do
+    packages/soraos-release/soraos-release.install \
+    packages/sora-desk/files/SoraDesk.desktop \
+    packages/sora-desk/sora-desk.install; do
     if [[ -f "$path" ]]; then
         note "$path"
     else
         bad "missing $path"
     fi
 done
-if grep -qx 'soraos-desktop-meta' iso/packages.x86_64; then
-    note "live image installs soraos-desktop-meta"
+for product in sora-agent sora-desk sora-desk-bridge; do
+    if grep -q "'$product'" packages/soraos-desktop-meta/PKGBUILD; then
+        note "desktop meta includes $product"
+    else
+        bad "packages/soraos-desktop-meta/PKGBUILD does not depend on $product"
+    fi
+done
+if grep -q 'build --no-bundle' packages/sora-desk/PKGBUILD; then
+    note "SoraDesk uses the Tauri production build"
 else
-    bad "iso/packages.x86_64 does not install soraos-desktop-meta"
+    bad "SoraDesk must build with 'tauri build --no-bundle', not bare cargo"
+fi
+if grep -q 'websockets>=15,<18' packages/sora-desk-bridge/PKGBUILD; then
+    note "bridge websockets guard is the tested Arch version"
+else
+    bad "bridge websockets guard is missing; verify the smoke suite before changing it"
+fi
+if grep -qx 'soraos-desktop-meta' iso/packages.x86_64 \
+    && grep -qx 'sora-agent' iso/packages.x86_64 \
+    && grep -qx 'sora-desk' iso/packages.x86_64 \
+    && grep -qx 'sora-desk-bridge' iso/packages.x86_64; then
+    note "live image installs the SoraOS product packages"
+else
+    bad "iso/packages.x86_64 does not install SoraAgent/SoraDesk"
 fi
 
 echo "== live image =="

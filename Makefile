@@ -1,6 +1,6 @@
 SHELL := /usr/bin/env bash
 
-.PHONY: all deps branding check repo iso run run-bios run-sb clean
+.PHONY: all deps branding check repo publish iso run run-bios run-sb clean
 
 all: check iso
 
@@ -15,6 +15,9 @@ check:
 
 repo:
 	@./scripts/build-repo.sh
+
+publish:
+	@./scripts/publish-mirror.sh
 
 iso:
 	@./scripts/build.sh

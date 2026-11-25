@@ -15,6 +15,12 @@
 # Local package build output
 packages/**/pkg/
 packages/**/src/
+packages/**/dist/
+packages/**/*.tar.gz
+packages/**/*.tar.bz2
+packages/**/*.tar.xz
+packages/**/*.zip
+packages/**/*.whl
 *.pkg.tar.zst
 *.pkg.tar.zst.sig
 

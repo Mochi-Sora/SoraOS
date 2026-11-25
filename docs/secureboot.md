@@ -2,16 +2,20 @@
 
 ## Current state
 
-The M2a ISO is **unsigned**. The `[soraos]` packages are signed for pacman,
-but those signatures cover no EFI binary and firmware does not trust them.
-With Secure Boot enabled the ISO is refused, exactly as the official Arch ISO
-is. Secure Boot must be disabled or set to setup mode.
+The M2b live ISO is **unsigned**. The `[soraos]` packages and repository are
+signed for pacman, but those signatures cover no EFI binary and firmware does
+not trust them. With Secure Boot enabled the ISO is refused, exactly as the
+official Arch ISO is. Secure Boot must be disabled or set to setup mode.
 
 Package signing and boot signing are separate:
 
-- `soraos-keyring` lets pacman verify `[soraos]` packages;
+- `soraos-keyring` lets pacman verify `[soraos]` packages and the hosted mirror;
 - Secure Boot needs a signed boot chain (bootloader and kernel or UKI) and a
   certificate enrolled in firmware `db`.
+
+The repository currently uses a development test key. Replacing that key is a
+repository-signing change, not a Secure Boot enrollment; the two trust stores
+must stay separate.
 
 Secure Boot is an **optional M4 milestone**, not a prerequisite for M2 or M3.
 If it is descoped, "Secure Boot off" remains the documented requirement. This
@@ -63,9 +67,10 @@ recommended for this project.
 
 ## Recommended plan
 
-1. **M0–M2a (done):** ship an unsigned ISO; sign `[soraos]` packages only for
-   pacman repository trust. Do not block live-image work on boot signing.
-2. **M2b/M3:** keep boot signing out of scope. Calamares and the installable system
+1. **M0–M2b (done):** ship an unsigned ISO; sign `[soraos]` packages and the
+   hosted mirror only for pacman repository trust. Do not block live-image work
+   on boot signing.
+2. **M3:** keep boot signing out of scope. Calamares and the installable system
    remain unsigned; boot signing does not block the installer milestone.
 3. **M4 (optional):** add `secureboot/` tooling:
    - `secureboot-keygen.sh` — create `db.key`/`db.crt` offline, gitignored.
@@ -96,7 +101,7 @@ recommended for this project.
 ## Testing Secure Boot
 
 `run_archiso -s` boots OVMF with Secure Boot enabled. The current unsigned
-M2a ISO is expected to fail. To test a future signed image:
+M2b ISO is expected to fail. To test a future signed image:
 
 1. Boot a Linux VM with OVMF and enroll `db.crt` into the firmware `db`
    (`sbctl enroll-keys --microsoft` or firmware setup).

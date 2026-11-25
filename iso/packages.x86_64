@@ -1,13 +1,18 @@
-# SoraOS live image package set (M2a)
+# SoraOS live image package set (M2b)
 # Keep this list lean and intentional. The installed system is produced by
 # Calamares in a later milestone, not by copying this image.
 
-# SoraOS product packages (served from the local [soraos] repo in M2a)
+# SoraOS product packages (served from the local [soraos] repo)
 soraos-keyring
 soraos-mirrorlist
 soraos-release
 soraos-branding
 soraos-desktop-meta
+# Product integrations pulled in by soraos-desktop-meta, listed here so the
+# image package set is explicit.
+sora-agent
+sora-desk
+sora-desk-bridge
 
 # Base system
 base
@@ -44,6 +49,7 @@ alsa-utils
 pipewire
 pipewire-pulse
 pipewire-alsa
+pipewire-jack
 wireplumber
 bluez
 bluez-utils
@@ -58,10 +64,12 @@ networkmanager
 wpa_supplicant
 wireless-regdb
 iw
+iptables
 
 # KDE Plasma
 plasma-meta
 plasma-login-manager
+qt6-multimedia-ffmpeg
 konsole
 dolphin
 kio-extras
@@ -69,6 +77,7 @@ kate
 ark
 gwenview
 okular
+tesseract-data-eng
 udisks2
 flatpak
 xdg-user-dirs

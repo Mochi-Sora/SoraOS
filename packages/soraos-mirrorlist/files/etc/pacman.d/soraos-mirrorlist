@@ -1,4 +1,7 @@
-# SoraOS repository mirror list (M2a local development).
-# The live ISO carries this repository at /opt/soraos/repo/$arch.
-# Replace this with a hosted mirror before publishing.
+# SoraOS repository mirror list (M2b).
+#
+# The signed repository is published to the SoraOfficialWebsite GitHub Pages
+# mirror. The live medium also carries a local copy for offline use; an
+# installed system ignores the missing local path and uses the HTTPS mirror.
+Server = https://mochi-sora.github.io/SoraOfficialWebsite/repo/$arch
 Server = file:///opt/soraos/repo/$arch

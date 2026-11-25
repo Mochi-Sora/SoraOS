@@ -1,0 +1,25 @@
+pkgname=python-questionary
+pkgver=2.1.1
+pkgrel=1
+pkgdesc='Python library for interactive command-line prompts'
+arch=('any')
+url='https://github.com/tmbo/questionary'
+license=('MIT')
+depends=('python' 'python-prompt_toolkit')
+makedepends=('python-build' 'python-installer' 'python-setuptools' 'python-wheel')
+source=("$pkgname-$pkgver.tar.gz::https://files.pythonhosted.org/packages/f6/45/eafb0bba0f9988f6a2520f9ca2df2c82ddfa8d67c95d6625452e97b204a5/questionary-$pkgver.tar.gz")
+sha256sums=('3d7e980292bb0107abaa79c68dd3eee3c561b83a0f89ae482860b181c8bd412d')
+
+build() {
+    cd "questionary-$pkgver"
+    # Questionary uses Poetry as its build backend; isolated build downloads it
+    # rather than requiring poetry-core on the build host.
+    python -m build --wheel
+}
+
+package() {
+    cd "questionary-$pkgver"
+    python -m installer --destdir="$pkgdir" dist/*.whl
+    install -Dm644 LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+    install -Dm644 NOTICE "$pkgdir/usr/share/licenses/$pkgname/NOTICE"
+}

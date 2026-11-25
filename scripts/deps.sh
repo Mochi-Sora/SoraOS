@@ -3,7 +3,7 @@
 # already present. This script does not install anything.
 set -euo pipefail
 
-packages=(archiso qemu-desktop edk2-ovmf librsvg base-devel gnupg)
+packages=(archiso qemu-desktop edk2-ovmf librsvg base-devel gnupg rust nodejs npm python-build python-installer python-wheel python-setuptools webkit2gtk-4.1 gtk3)
 echo "Install the build/test toolchain with:"
 echo
 echo "  sudo pacman -S --needed ${packages[*]}"
@@ -25,6 +25,8 @@ check rsvg-convert "$(command -v rsvg-convert || echo /usr/bin/rsvg-convert)"
 check makepkg "$(command -v makepkg || echo /usr/bin/makepkg)"
 check repo-add "$(command -v repo-add || echo /usr/bin/repo-add)"
 check gpg "$(command -v gpg || echo /usr/bin/gpg)"
+check cargo "$(command -v cargo || echo /usr/bin/cargo)"
+check npm "$(command -v npm || echo /usr/bin/npm)"
 
 ovmf_code=""
 for candidate in \
@@ -41,4 +43,5 @@ check ovmf-code "${ovmf_code:-/usr/share/edk2/x64/OVMF_CODE.4m.fd}"
 echo
 echo "Note: archiso 92+ can run mkarchiso as a normal user through user"
 echo "namespaces. No sudo is needed for 'make iso' once archiso is installed."
-echo "The M2a package repo is built locally with makepkg/repo-add/gpg."
+echo "M2b builds SoraDesk from source with rust/nodejs/npm, and builds the"
+echo "Python packages with python-build and python-installer."

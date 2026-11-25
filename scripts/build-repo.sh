@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build the SoraOS packages, sign them, and refresh the local M2a repository.
+# Build the SoraOS packages, sign them, and refresh the local repository.
 set -euo pipefail
 
 ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -13,6 +13,10 @@ die() { echo "error: $*" >&2; exit 1; }
 command -v makepkg >/dev/null 2>&1 || die "makepkg not found; install base-devel"
 command -v repo-add >/dev/null 2>&1 || die "repo-add not found; install pacman"
 command -v gpg >/dev/null 2>&1 || die "gpg not found; install gnupg"
+command -v npm >/dev/null 2>&1 || die "npm not found; install nodejs npm (SoraDesk source build)"
+command -v cargo >/dev/null 2>&1 || die "cargo not found; install rust (SoraDesk source build)"
+python -c 'import build, installer' >/dev/null 2>&1 \
+    || die "python-build/python-installer not found; install them (Python package builds)"
 [[ -f "$KEYID_FILE" ]] || die "no signing key; run scripts/gen-test-key.sh first"
 KEYID="$(cat "$KEYID_FILE")"
 

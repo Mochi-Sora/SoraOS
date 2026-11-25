@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Create the local M2a test signing key and publish its public half.
+# Create the local test signing key and publish its public half.
 #
 # This is deliberately a TEST key. The private key stays in repo/keys/ (ignored
 # by git); the public key is committed in the soraos-keyring package. Replace

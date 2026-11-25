@@ -53,7 +53,7 @@ export SOURCE_DATE_EPOCH
 
 mkdir -p "$OUT" "$ROOT/.cache/pacman/pkg"
 
-# M2a: build, sign, and stage the local [soraos] repository. Set
+# M2b: build, sign, and stage the local [soraos] repository. Set
 # SORAOS_SKIP_REPO=1 to reuse an existing repo during ISO-only iteration.
 if [[ "${SORAOS_SKIP_REPO:-0}" != "1" ]]; then
     "$ROOT/scripts/build-repo.sh"
@@ -65,6 +65,13 @@ mkdir -p "$STAGED_REPO"
 cp -a "$REPO_DIR" "$STAGED_REPO/"
 cleanup_staged_repo() { rm -rf "$STAGED_REPO"; }
 trap cleanup_staged_repo EXIT
+
+# Local packages are rebuilt with the same filename. Drop cached copies so
+# pacman cannot reuse an older build whose checksum no longer matches the DB.
+find "$ROOT/.cache/pacman/pkg" -maxdepth 1 -type f \
+    \( -name 'soraos-*.pkg.tar.zst*' -o -name 'sora-agent-*.pkg.tar.zst*' \
+       -o -name 'sora-desk-*.pkg.tar.zst*' -o -name 'python-questionary-*.pkg.tar.zst*' \) \
+    -delete
 
 # Rootless builds cannot write the host's /var/cache/pacman/pkg. Give mkarchiso
 # a build-only pacman config with a repo-local cache.
@@ -87,7 +94,12 @@ printf '\n[soraos]\nSigLevel = Never\nServer = file:///build/repo/x86_64\n' \
 if [[ -e "$WORK" ]]; then
     if [[ -O "$WORK" ]]; then
         echo "Removing stale $WORK..."
-        rm -rf -- "$WORK"
+        if ! rm -rf -- "$WORK" 2>/dev/null; then
+            # A failed unprivileged build can leave root-owned files inside the
+            # userns. Remove them through a fresh mapping instead of asking for
+            # real root.
+            unshare --map-auto --map-root-user rm -rf -- "$WORK"
+        fi
     else
         die "$WORK exists and is not owned by you. Check 'findmnt' for stale
 bind mounts, then remove it with sudo before building."
@@ -105,7 +117,7 @@ run_container() {
     fi
 
     echo "Building in an archlinux container with $engine..."
-    "$engine" run --rm -it --privileged \
+    "$engine" run --rm --privileged \
         --security-opt label=disable \
         -e SOURCE_DATE_EPOCH="$SOURCE_DATE_EPOCH" \
         -v "$ROOT:/build:Z" \
@@ -132,7 +144,7 @@ run_host() {
         echo "archiso: $(pacman -Q archiso 2>/dev/null || echo 'unknown')"
     fi
 
-    mkarchiso -v -r -C "$BUILD_PACMAN_CONF" -w "$WORK" -o "$OUT" "$PROFILE"
+    mkarchiso -v -r -C "$BUILD_PACMAN_CONF" -w "$WORK" -o "$OUT" "$PROFILE" </dev/null
 }
 
 case "$ENGINE" in

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=SoraDesk
+Comment=Desktop client for the SoraAgent runtime
+Exec=soradesk
+Icon=soradesk
+Terminal=false
+Categories=Office;Network;
+Keywords=AI;agent;chat;assistant;
+StartupWMClass=soradesk
