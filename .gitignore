@@ -1,0 +1,19 @@
+/out/
+/work/
+/.cache/
+*.iso
+*.iso.sha256
+/out/qemu-serial.log
+
+# Build-time secrets (Secure Boot signing keys, repo signing keys)
+/secureboot/keys/
+/repo/keys/
+
+# Local package build output
+packages/**/pkg/
+packages/**/src/
+*.pkg.tar.zst
+
+# Editor/OS noise
+*.swp
+.DS_Store

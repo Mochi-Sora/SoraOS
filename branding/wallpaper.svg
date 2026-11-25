@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="3840" height="2160" viewBox="0 0 3840 2160">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0d1117"/>
+      <stop offset="0.55" stop-color="#0b0f15"/>
+      <stop offset="1" stop-color="#090c11"/>
+    </linearGradient>
+    <radialGradient id="pink" cx="0.16" cy="0.12" r="0.62">
+      <stop offset="0" stop-color="#e789a0" stop-opacity="0.20"/>
+      <stop offset="0.45" stop-color="#e789a0" stop-opacity="0.05"/>
+      <stop offset="1" stop-color="#e789a0" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="blue" cx="0.88" cy="0.90" r="0.55">
+      <stop offset="0" stop-color="#7aa2f7" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#7aa2f7" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="3840" height="2160" fill="url(#bg)"/>
+  <rect width="3840" height="2160" fill="url(#pink)"/>
+  <rect width="3840" height="2160" fill="url(#blue)"/>
+
+  <g fill="none" stroke="#e6edf3" stroke-opacity="0.025" stroke-width="2">
+    <circle cx="3120" cy="1130" r="420"/>
+    <circle cx="3120" cy="1130" r="620"/>
+    <circle cx="3120" cy="1130" r="820"/>
+  </g>
+
+  <g transform="translate(240 1756)">
+    <g transform="scale(1.875)">
+      <rect width="64" height="64" rx="15" fill="#e789a0"/>
+      <path d="M11 17h11v13h20V17h11v30H42V39H22v8H11V17Z" fill="#fffaf1"/>
+    </g>
+    <text x="158" y="52" font-family="DejaVu Sans, sans-serif" font-size="58" font-weight="600"
+          fill="#e6edf3" letter-spacing="1">SoraOS</text>
+    <text x="160" y="94" font-family="DejaVu Sans, sans-serif" font-size="24"
+          fill="#8b949e" letter-spacing="0.5">by SoraPlatform</text>
+  </g>
+  <rect x="242" y="1908" width="118" height="3" fill="#e789a0" opacity="0.85"/>
+</svg>

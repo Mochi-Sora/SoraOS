@@ -1,0 +1,18 @@
+# remove from airootfs!
+# One-shot configuration for the live image. Runs at the end of the package
+# transaction, after filesystem/shadow/Plasma Login Manager are installed.
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Package
+Target = filesystem
+
+[Action]
+Description = Configuring the SoraOS live image...
+When = PostTransaction
+Depends = shadow
+Depends = sudo
+Depends = plasma-login-manager
+Depends = networkmanager
+Depends = bluez
+Exec = /bin/bash /usr/local/bin/soraos-airootfs-setup

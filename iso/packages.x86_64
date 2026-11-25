@@ -1,0 +1,79 @@
+# SoraOS live image package set (M1)
+# Keep this list lean and intentional. The installed system is produced by
+# Calamares in a later milestone, not by copying this image.
+
+# Base system
+base
+linux-lts
+linux-firmware
+intel-ucode
+amd-ucode
+mkinitcpio
+mkinitcpio-archiso
+sudo
+nano
+less
+man-db
+bash-completion
+
+# Boot / install media plumbing
+syslinux
+efibootmgr
+dosfstools
+e2fsprogs
+exfatprogs
+f2fs-tools
+ntfs-3g
+btrfs-progs
+xfsprogs
+gptfdisk
+parted
+cryptsetup
+lvm2
+
+# Hardware support
+sof-firmware
+alsa-utils
+pipewire
+pipewire-pulse
+pipewire-alsa
+wireplumber
+bluez
+bluez-utils
+power-profiles-daemon
+vulkan-intel
+vulkan-radeon
+intel-media-driver
+libva-intel-driver
+
+# Networking
+networkmanager
+wpa_supplicant
+wireless-regdb
+iw
+
+# KDE Plasma
+plasma-meta
+plasma-login-manager
+konsole
+dolphin
+kio-extras
+kate
+ark
+gwenview
+okular
+udisks2
+flatpak
+xdg-user-dirs
+xdg-utils
+
+# Audio / fonts / browser
+noto-fonts
+noto-fonts-emoji
+ttf-liberation
+ttf-dejavu
+firefox
+
+# Accessibility
+espeakup
+brltty

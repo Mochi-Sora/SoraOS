@@ -1,0 +1,14 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "SoraPlatform"
+            }
+        ],
+        "Description": "SoraOS default wallpaper",
+        "Id": "SoraOS",
+        "License": "CC0-1.0",
+        "Name": "SoraOS",
+        "Version": "1.0"
+    }
+}

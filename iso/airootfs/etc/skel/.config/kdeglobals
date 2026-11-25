@@ -1,0 +1,5 @@
+[KDE]
+LookAndFeelPackage=org.soraos.desktop
+
+[General]
+BrowserApplication=firefox.desktop

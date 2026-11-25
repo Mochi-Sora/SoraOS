@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# One-shot live-image configuration. Runs inside the airootfs chroot during
+# the ISO build, from 90-soraos-setup.hook, and removes itself afterwards.
+set -euo pipefail
+
+# --- Distribution identity -------------------------------------------------
+# filesystem owns /usr/lib/os-release and /etc/issue, so these are written
+# after package installation rather than shipped through the airootfs overlay.
+cat > /usr/lib/os-release <<'EOF'
+NAME="SoraOS"
+PRETTY_NAME="SoraOS"
+ID=soraos
+ID_LIKE=arch
+BUILD_ID=rolling
+ANSI_COLOR="38;2;231;137;160"
+HOME_URL="https://mochi-sora.github.io/SoraOfficialWebsite/"
+SUPPORT_URL="https://github.com/Mochi-Sora"
+BUG_REPORT_URL="https://github.com/Mochi-Sora"
+LOGO=soraos
+EOF
+
+ln -sfn ../usr/lib/os-release /etc/os-release
+
+cat > /etc/issue <<'EOF'
+SoraOS \r (\l)
+EOF
+
+# --- Live session account --------------------------------------------------
+# The live medium is intentionally passwordless: Plasma Login Manager
+# autologins this account and sudo is NOPASSWD. Do not treat it as a secure
+# installed system.
+if ! id sora &>/dev/null; then
+    useradd -m -u 1000 \
+        -G wheel,video,render,audio,optical,storage \
+        -s /bin/bash sora
+    passwd -d sora
+fi
+
+install -d -m 0750 /etc/sudoers.d
+cat > /etc/sudoers.d/10-sora-live <<'EOF'
+%wheel ALL=(ALL:ALL) NOPASSWD: ALL
+EOF
+chmod 0440 /etc/sudoers.d/10-sora-live
+
+# --- Pacman configuration --------------------------------------------------
+# pacman owns /etc/pacman.conf, so install the SoraOS copy after the package
+# transaction instead of relying on the profile overlay.
+install -m 0644 /etc/soraos/pacman.conf /etc/pacman.conf
+
+# --- Services --------------------------------------------------------------
+systemctl enable \
+    pacman-init.service \
+    NetworkManager.service \
+    bluetooth.service \
+    systemd-timesyncd.service \
+    plasmalogin.service
+systemctl set-default graphical.target
+
+# --- Self-cleanup ----------------------------------------------------------
+# Build-time only; neither the script nor its hook belongs on the live medium.
+rm -f /usr/local/bin/soraos-airootfs-setup
+rm -f /etc/pacman.d/hooks/90-soraos-setup.hook
