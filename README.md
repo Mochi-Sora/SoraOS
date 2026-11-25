@@ -7,7 +7,7 @@
 <p align="center"><strong>An Arch-based KDE Plasma desktop that stays Arch underneath.</strong></p>
 
 <p align="center">
-  <a href="#status"><img src="https://img.shields.io/badge/status-M1%20validated-e789a0" alt="Status M1 validated"></a>
+  <a href="#status"><img src="https://img.shields.io/badge/status-M1%20validated-7aa2f7" alt="Status M1 validated"></a>
   <a href="https://archlinux.org/"><img src="https://img.shields.io/badge/base-Arch%20Linux-1793d1" alt="Arch Linux"></a>
   <a href="https://archlinux.org/packages/core/x86_64/linux-lts/"><img src="https://img.shields.io/badge/kernel-linux--lts-333" alt="linux-lts"></a>
   <a href="https://kde.org/plasma-desktop/"><img src="https://img.shields.io/badge/desktop-KDE%20Plasma-1d99f3" alt="KDE Plasma"></a>
@@ -83,7 +83,7 @@
 
 - `linux-lts` only, with the archiso initramfs hooks intact and no custom kernel.
 - KDE Plasma 6 with Plasma Login Manager and autologin to a live `sora` user.
-- SoraOS branding: `os-release`, boot menus, Plasma look-and-feel, wallpaper, icon, MOTD, and greeter wallpaper.
+- SoraOS branding: `os-release`, boot menus, the SoraOS Plasma color scheme, look-and-feel, wallpaper, icon, MOTD, and greeter wallpaper.
 - NetworkManager, PipeWire, Bluetooth, Firefox, Dolphin, Konsole, Kate, Ark, Gwenview, Okular, and Flatpak.
 - Live-medium behavior: 4 GiB CoW space, volatile journal, no suspend on lid close, pacman keyring initialized at boot, mirrors ready.
 - BIOS and UEFI boot, including a separate speech/accessibility entry.

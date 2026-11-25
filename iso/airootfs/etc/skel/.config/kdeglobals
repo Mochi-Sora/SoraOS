@@ -2,4 +2,6 @@
 LookAndFeelPackage=org.soraos.desktop
 
 [General]
+ColorScheme=SoraOS
+AccentColor=122,162,247
 BrowserApplication=firefox.desktop

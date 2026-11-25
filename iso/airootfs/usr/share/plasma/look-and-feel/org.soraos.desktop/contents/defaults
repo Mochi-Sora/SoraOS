@@ -2,7 +2,8 @@
 widgetStyle=Breeze
 
 [kdeglobals][General]
-ColorScheme=BreezeDark
+ColorScheme=SoraOS
+AccentColor=122,162,247
 
 [kdeglobals][Icons]
 Theme=breeze-dark

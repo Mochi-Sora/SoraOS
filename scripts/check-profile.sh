@@ -144,6 +144,7 @@ for path in \
     iso/airootfs/usr/local/bin/livecd-sound \
     iso/airootfs/usr/share/wallpapers/SoraOS/metadata.json \
     iso/airootfs/usr/share/wallpapers/SoraOS/contents/images/3840x2160.png \
+    iso/airootfs/usr/share/color-schemes/SoraOS.colors \
     iso/airootfs/usr/share/plasma/look-and-feel/org.soraos.desktop/metadata.json \
     iso/syslinux/splash.png; do
     if [[ -e "$path" ]]; then
@@ -179,6 +180,21 @@ else
     bad "skel look-and-feel does not match the installed package (${laf_id:-unset})"
 fi
 
+color_scheme="iso/airootfs/usr/share/color-schemes/SoraOS.colors"
+if grep -q '^ColorScheme=SoraOS$' "$color_scheme" \
+    && grep -q '^ColorScheme=SoraOS$' iso/airootfs/etc/skel/.config/kdeglobals \
+    && grep -q '^ColorScheme=SoraOS$' iso/airootfs/usr/share/plasma/look-and-feel/org.soraos.desktop/contents/defaults; then
+    note "skel and look-and-feel select the SoraOS color scheme"
+else
+    bad "SoraOS color scheme is not selected in skel and look-and-feel"
+fi
+if grep -q '^AccentColor=122,162,247$' iso/airootfs/etc/skel/.config/kdeglobals \
+    && grep -q '^AccentColor=122,162,247$' iso/airootfs/usr/share/plasma/look-and-feel/org.soraos.desktop/contents/defaults; then
+    note "accent color is the SoraPlatform blue"
+else
+    bad "accent color is not 122,162,247 in skel and look-and-feel"
+fi
+
 if grep -q 'NOPASSWD' iso/airootfs/etc/sudoers.d/10-sora-live; then
     note "live sudo is passwordless"
 else
@@ -189,6 +205,34 @@ if grep -q -- '-s /bin/bash sora' iso/airootfs/usr/local/bin/soraos-airootfs-set
     note "live user creation hook present"
 else
     bad "live user creation hook missing"
+fi
+
+echo "== branding =="
+if cmp -s branding/sora-mark.svg iso/airootfs/usr/share/icons/hicolor/scalable/apps/soraos.svg \
+    && cmp -s branding/sora-mark.svg iso/airootfs/usr/share/pixmaps/soraos.svg; then
+    note "installed icons match branding/sora-mark.svg"
+else
+    bad "installed icons are stale; run scripts/build-branding.sh"
+fi
+if grep -q 'C 690 245' branding/sora-mark.svg; then
+    note "SoraPlatform S mark in use"
+else
+    bad "branding/sora-mark.svg is not the SoraPlatform S mark"
+fi
+if grep -Rq 'M11 17h11v13h20V17h11v30H42V39H22v8H11V17Z' branding iso/airootfs; then
+    bad "website placeholder H mark is still present"
+else
+    note "placeholder H mark is gone"
+fi
+if grep -RqI '#e789a0' branding iso/airootfs iso/syslinux README.md; then
+    bad "old pink palette (#e789a0) is still present"
+else
+    note "branding uses the SoraPlatform palette"
+fi
+if grep -q 'ANSI_COLOR="38;2;122;162;247"' iso/airootfs/usr/local/bin/soraos-airootfs-setup; then
+    note "os-release accent is platform blue"
+else
+    bad "os-release ANSI_COLOR is not the platform blue"
 fi
 
 echo "== file_permissions =="

@@ -48,7 +48,10 @@ Run these inside the live desktop unless noted otherwise.
 
 - [ ] Plasma Login Manager autologins `sora` without a password.
 - [ ] The greeter and desktop use the SoraOS dark wallpaper.
+- [ ] The SoraOS mark is the gradient **S**, not the website placeholder **H**;
+      accents are blue/purple (`#7aa2f7` / `#bb9af7`).
 - [ ] Look and feel is **SoraOS** (`plasma-apply-lookandfeel --list`).
+- [ ] Color scheme is **SoraOS** (`plasma-apply-colorscheme --list`).
 - [ ] `id sora` shows `wheel,video,render,audio,optical,storage`.
 - [ ] `sudo -n true` succeeds (passwordless sudo in the live session).
 - [ ] Dolphin, Konsole, Kate, Ark, Gwenview, Okular and Firefox launch.
@@ -102,6 +105,7 @@ Without any audio hardware the speech units are expected to fail.
 | Kernel panic finding root | boot entry points at `vmlinuz-linux` instead of `vmlinuz-linux-lts` |
 | Black screen after boot | GPU driver missing; try the X11 session or `nomodeset` |
 | Greeter asks for a password | `/etc/plasmalogin.conf` missing or wrong `User=`/`Session=` |
+| Pink **H** logo or Breeze Dark colors | stale branding assets; run `make branding`, confirm `ColorScheme=SoraOS`, and rebuild |
 | Boot hangs at an **Initial Setup** prompt | `systemd-firstboot` ran because `/etc/machine-id` is `uninitialized`; check `systemd.firstboot=no` in `profiledef.sh` and the mask symlink in `airootfs` |
 | Speech entry: `Unable to locate executable '/usr/local/bin/livecd-sound': Permission denied` | `mkarchiso` does not preserve modes; list the script as `0:0:755` in `file_permissions` |
 | Speech entry: `livecd-talk` fails but the desktop is fine | QEMU without a sound card; add `-device intel-hda -device hda-duplex` or retest on hardware |
